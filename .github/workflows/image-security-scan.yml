@@ -14,18 +14,17 @@ jobs:
       - name: Build image
         run: docker build -t pr-kubegallery:${{ github.sha }} .
 
-      # Install Docker Scout CLI manually
+      # Install Docker Scout CLI
       - name: Install Docker Scout CLI
         run: |
           curl -sSfL https://raw.githubusercontent.com/docker/scout-cli/main/install.sh | sh -s -- -b /usr/local/bin
-          docker scout version
+          docker-scout version
 
       # Run CVE scan and fail if High/Critical exist
       - name: Scan for CVEs (High/Critical only)
         run: |
-          docker scout cves pr-kubegallery:${{ github.sha }} --format table > scout-report.txt
+          docker-scout cves pr-kubegallery:${{ github.sha }} --format table > scout-report.txt
           cat scout-report.txt
-          # Count High or Critical vulnerabilities
           if grep -E "HIGH|CRITICAL" scout-report.txt; then
             echo "::error::High or Critical CVEs found!"
             exit 1
