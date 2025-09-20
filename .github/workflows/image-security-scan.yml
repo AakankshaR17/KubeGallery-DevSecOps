@@ -6,21 +6,27 @@ on:
 jobs:
   scout:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
 
-      # Build the image that we will scan
+      # Build the image
       - name: Build image
         run: docker build -t pr-kubegallery:${{ github.sha }} .
 
-      # Run Docker Scout via the official GitHub Action, limited to High+Critical
-      - name: Docker Scout CVEs (High/Critical only)
-        uses: docker/scout-action@v1
-        with:
-          command: cves
-          image: pr-kubegallery:${{ github.sha }}
-          only-severities: critical,high
-          exit-code: true   # fail the job if any High/Critical exists
+      # Install Docker Scout CLI manually
+      - name: Install Docker Scout CLI
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/docker/scout-cli/main/install.sh | sh -s -- -b /usr/local/bin
+          docker scout version
+
+      # Run CVE scan and fail if High/Critical exist
+      - name: Scan for CVEs (High/Critical only)
+        run: |
+          docker scout cves pr-kubegallery:${{ github.sha }} --format table > scout-report.txt
+          cat scout-report.txt
+          # Count High or Critical vulnerabilities
+          if grep -E "HIGH|CRITICAL" scout-report.txt; then
+            echo "::error::High or Critical CVEs found!"
+            exit 1
+          fi
