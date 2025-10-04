@@ -28,17 +28,12 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Log in to ACR
-        run: az acr login --name ${{ secrets.AZURE_CONTAINER_REGISTRY }}
-
-      - name: Build and push Docker image
         run: |
-          IMAGE=aakankshaacr03100007.azurecr.io/kube-gallery:${{ github.sha }}
-          docker build -t $IMAGE .
-          docker push $IMAGE
-          echo "IMAGE=$IMAGE" >> $GITHUB_ENV
+          az acr login --name ${{ secrets.AZURE_CONTAINER_REGISTRY }}
 
       - name: Deploy to Azure Container Apps (Production)
         run: |
+          IMAGE=${{ secrets.AZURE_CONTAINER_REGISTRY }}.azurecr.io/kube-gallery:${{ github.sha }}
           az containerapp update \
             -g ${{ secrets.AZURE_RESOURCE_GROUP }} \
             -n aca-frontend-prod \
