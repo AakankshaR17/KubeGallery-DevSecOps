@@ -1,46 +1,45 @@
-name: Deploy to Azure Container Apps (Staging)
+name: Deploy to Staging
 
 on:
   push:
     branches:
       - main
-
-permissions:
-  id-token: write   # REQUIRED for OIDC login
-  contents: read    # Needed for checkout
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     environment: Staging
 
+    permissions:
+      id-token: write
+      contents: read
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      - name: Azure Login
+      - name: Azure Login (OIDC)
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      # ✅ Log in with registry name only
       - name: Docker Login to ACR
         run: |
-          az acr login --name ${{ secrets.AZURE_CONTAINER_REGISTRY }}
+          REG_NAME=$(echo ${{ secrets.AZURE_CONTAINER_REGISTRY }} | cut -d'.' -f1)
+          az acr login --name $REG_NAME
 
-      # ✅ Build & push using full login server
       - name: Build and push Docker image
         run: |
-          IMAGE=${{ secrets.AZURE_CONTAINER_REGISTRY }}.azurecr.io/kube-gallery:${{ github.sha }}
+          IMAGE=${{ secrets.AZURE_CONTAINER_REGISTRY }}/kube-gallery:${{ github.sha }}
           echo "Using image: $IMAGE"
           docker build -t $IMAGE .
           docker push $IMAGE
           echo "IMAGE=$IMAGE" >> $GITHUB_ENV
 
-      # ✅ Deploy to Container App
-      - name: Deploy to Azure Container App (Staging)
+      - name: Deploy to Azure Container Apps (Staging)
         run: |
           az containerapp update \
             -g ${{ secrets.AZURE_RESOURCE_GROUP }} \
