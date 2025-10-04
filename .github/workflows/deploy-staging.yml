@@ -3,7 +3,7 @@ name: Deploy to Staging
 on:
   push:
     branches:
-      - main
+      - main  # deploy on push to main
 
 permissions:
   id-token: write
@@ -25,9 +25,12 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+      - name: Log in to ACR
+        run: az acr login --name ${{ secrets.AZURE_CONTAINER_REGISTRY }}
+
       - name: Build and push Docker image
         run: |
-          IMAGE=${{ secrets.AZURE_CONTAINER_REGISTRY }}/kube-gallery:${{ github.sha }}
+          IMAGE=aakankshaacr03100007.azurecr.io/kube-gallery:${{ github.sha }}
           docker build -t $IMAGE .
           docker push $IMAGE
           echo "IMAGE=$IMAGE" >> $GITHUB_ENV
