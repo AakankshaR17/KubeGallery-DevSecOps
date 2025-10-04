@@ -7,7 +7,7 @@ on:
       - "v*"
 
 permissions:
-  id-token: write   # REQUIRED for OIDC
+  id-token: write
   contents: read
 
 jobs:
@@ -33,6 +33,7 @@ jobs:
       - name: Build and push Docker image
         run: |
           IMAGE=${{ secrets.AZURE_CONTAINER_REGISTRY }}.azurecr.io/kube-gallery:${{ github.sha }}
+          echo "Using image: $IMAGE"
           docker build -t $IMAGE .
           docker push $IMAGE
           echo "IMAGE=$IMAGE" >> $GITHUB_ENV

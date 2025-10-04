@@ -4,12 +4,10 @@ on:
   push:
     branches:
       - main
-    paths:
-      - '**/*'
 
 permissions:
-  id-token: write   # REQUIRED for OIDC
-  contents: read    # so actions/checkout works
+  id-token: write   # REQUIRED for OIDC login
+  contents: read    # Needed for checkout
 
 jobs:
   build-and-deploy:
@@ -27,17 +25,21 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+      # ✅ Log in with registry name only
       - name: Docker Login to ACR
         run: |
           az acr login --name ${{ secrets.AZURE_CONTAINER_REGISTRY }}
 
+      # ✅ Build & push using full login server
       - name: Build and push Docker image
         run: |
           IMAGE=${{ secrets.AZURE_CONTAINER_REGISTRY }}.azurecr.io/kube-gallery:${{ github.sha }}
+          echo "Using image: $IMAGE"
           docker build -t $IMAGE .
           docker push $IMAGE
           echo "IMAGE=$IMAGE" >> $GITHUB_ENV
 
+      # ✅ Deploy to Container App
       - name: Deploy to Azure Container App (Staging)
         run: |
           az containerapp update \
