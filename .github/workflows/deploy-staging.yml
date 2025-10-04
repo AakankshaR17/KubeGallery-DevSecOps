@@ -7,6 +7,10 @@ on:
     paths:
       - '**/*'
 
+permissions:
+  id-token: write   # REQUIRED for OIDC
+  contents: read    # so actions/checkout works
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest

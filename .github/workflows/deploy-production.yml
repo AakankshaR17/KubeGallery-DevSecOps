@@ -1,10 +1,14 @@
 name: Deploy to Azure Container Apps (Production)
 
 on:
-  workflow_dispatch:   # manual trigger
+  workflow_dispatch:
   push:
     tags:
-      - "v*"          # deploys when you push a version tag like v1.0.0
+      - "v*"
+
+permissions:
+  id-token: write   # REQUIRED for OIDC
+  contents: read
 
 jobs:
   build-and-deploy:
