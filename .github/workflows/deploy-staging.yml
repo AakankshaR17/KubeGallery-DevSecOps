@@ -1,10 +1,11 @@
-name: Deploy to Staging
+name: Deploy to Azure Container Apps (Staging)
 
 on:
   push:
     branches:
       - main
-  workflow_dispatch:
+    paths:
+      - '**/*'
 
 jobs:
   build-and-deploy:
@@ -21,19 +22,19 @@ jobs:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          auth-type: IDENTITY
 
-      - name: Docker login to ACR
-        run: az acr login --name ${{ secrets.AZURE_CONTAINER_REGISTRY }}
+      - name: Docker Login to ACR
+        run: |
+          az acr login --name ${{ secrets.AZURE_CONTAINER_REGISTRY }}
 
       - name: Build and push Docker image
         run: |
-          IMAGE=${{ secrets.AZURE_CONTAINER_REGISTRY }}/kube-gallery:${{ github.sha }}
+          IMAGE=${{ secrets.AZURE_CONTAINER_REGISTRY }}.azurecr.io/kube-gallery:${{ github.sha }}
           docker build -t $IMAGE .
           docker push $IMAGE
           echo "IMAGE=$IMAGE" >> $GITHUB_ENV
 
-      - name: Deploy to Container Apps (Staging)
+      - name: Deploy to Azure Container App (Staging)
         run: |
           az containerapp update \
             -g ${{ secrets.AZURE_RESOURCE_GROUP }} \
