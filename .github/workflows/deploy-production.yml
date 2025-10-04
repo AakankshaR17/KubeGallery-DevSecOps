@@ -42,5 +42,4 @@ jobs:
           az containerapp update \
             -g ${{ secrets.AZURE_RESOURCE_GROUP }} \
             -n aca-frontend-prod \
-            --image $IMAGE \
-            --registry-server aakankshaacr03100007.azurecr.io
+            --image $IMAGE
